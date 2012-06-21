@@ -25,7 +25,7 @@ j.b should be === JNothing
 https://github.com/iron9light/lift-json/blob/master/src/test/scala/net/liftweb/json/macros/JsonSuite.scala#L11
 
 Kinda external DSL val scala macro.
-So this JSON string will be compiled at runtime.
+So this JSON string will be compiled at compile-time.
 
 ```scala
 JSON( """{ "a": ["100", 100, 100.1, true, false, null] }""") should be ===
