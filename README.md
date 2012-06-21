@@ -5,7 +5,9 @@ Based on lift branch [joni_scala_2.10](https://github.com/lift/framework/tree/jo
 
 Try to add some cool things with new features of scala 2.10 (reflection and macro etc.)
 
-* Dynamic invoke
+### Dynamic invoke
+
+https://github.com/iron9light/lift-json/blob/master/src/test/scala/net/liftweb/json/JValueSuite.scala
 
 ```scala
 val j: JValue = (
@@ -18,7 +20,9 @@ j.a.b should be === JString("c")
 j.b should be === JNothing
 ```
 
-* Write JValue with JSON String
+### Write JValue with JSON String
+
+https://github.com/iron9light/lift-json/blob/master/src/test/scala/net/liftweb/json/macros/JsonSuite.scala#L11
 
 Kinda external DSL val scala macro.
 So this JSON string will be compiled at runtime.
@@ -30,7 +34,9 @@ JSON( """{ "a": ["100", 100, 100.1, true, false, null] }""") should be ===
   )
 ```
 
-* Write JValue with Javascript-like String
+### Write JValue with Javascript-like String
+
+https://github.com/iron9light/lift-json/blob/master/src/test/scala/net/liftweb/json/macros/JSuite.scala
 
 Same as the JSON String, but support variables.
 
@@ -47,3 +53,5 @@ J( """
 }
 """)
 ```
+
+### And more...
