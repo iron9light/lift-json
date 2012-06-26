@@ -3,6 +3,7 @@ package macros
 
 import scala.reflect.makro.Context
 import scala.language.experimental.macros
+import scala.util.parsing.input.{Position => SPosition, OffsetPosition}
 
 /**
  * @author IL
@@ -14,10 +15,35 @@ object J {
     import c.universe._
     import MacroHelper._
 
-    val Literal(Constant(s_jsSource: String)) = jsSource.tree
+    val s_jsSource = jsSource.tree match {
+      case Literal(Constant(s: String)) =>
+        s
+      case _ =>
+        c.info(c.enclosingPosition, showRaw(jsSource.tree), false)
+        c.abort(c.enclosingPosition, "jsSource must be a string literal.")
+    }
+    
+    implicit val offset2pos = {
+      val pos = jsSource.tree.pos
+      val point = pos.point
+      val content = pos.fileContent
+      val fixedPoint = if (content.length >= point + 2 && content(point) == '\"' && content(point + 1) == '\"' && content(point + 2) == '\"') {
+        point + 3
+      } else {
+        point + 1
+      }
+      
+      (position: SPosition) => position match {
+        case OffsetPosition(_, offset) =>
+          pos.withPoint(fixedPoint + offset)
+        case _ =>
+          c.enclosingPosition
+          
+      }
+    }
 
     def js2tree(j: JsValue): c.Tree = {
-      j match {
+      val tree = j match {
         case JsNull =>
           c.reify(JNull).tree
         case JsString(s) =>
@@ -52,9 +78,14 @@ object J {
         case JsId(id) =>
           variable[JValue](c)(id)
       }
+      
+      tree.setPos(j.pos)
     }
 
-    val jsValue = JsParser.parseRaw(s_jsSource)
+    val jsValue = JsParser.parseRaw(s_jsSource){
+      case (msg, pos) =>
+        c.abort(pos, msg)
+    }
 
     c.Expr[JValue](js2tree(jsValue))
   }

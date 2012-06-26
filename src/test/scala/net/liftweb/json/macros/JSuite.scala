@@ -31,4 +31,23 @@ class JSuite extends FunSuite with ShouldMatchers {
       ))
     actual should be === expected
   }
+
+  ignore("only support string literal") {
+    val x = 2
+    // this will show error at compile time.
+    // J("[" + x + "]")
+  }
+
+  ignore("show error with position") {
+    // comment variable x will show error at compile time
+    val x = null
+    J(
+      """
+         {
+           "a": {
+             "b": x
+           }
+         }
+      """)
+  }
 }

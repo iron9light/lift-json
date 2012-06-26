@@ -2,6 +2,7 @@ package net.liftweb.json.macros
 
 import util.parsing.combinator.syntactical.StdTokenParsers
 import util.parsing.combinator.ImplicitConversions
+import scala.util.parsing.input.Positional
 
 /**
  * @author IL
@@ -35,16 +36,16 @@ class Parser extends StdTokenParsers with ImplicitConversions {
 
   // Define the grammar
   def root       = value
-  def jsonObj    = "{" ~> repsep(objEntry, ",") <~ "}" ^^ { case vals : List[(JsFieldName, JsValue)] => JsObject(vals) }
-  def jsonArray  = "[" ~> repsep(value, ",") <~ "]" ^^ { case vals : List[JsValue] => JsArray(vals) }
+  def jsonObj    = positioned("{" ~> repsep(objEntry, ",") <~ "}" ^^ { case vals : List[(JsFieldName, JsValue)] => JsObject(vals) })
+  def jsonArray  = positioned("[" ~> repsep(value, ",") <~ "]" ^^ { case vals : List[JsValue] => JsArray(vals) })
   def objEntry   = (stringVal | identifier) ~ (":" ~> value) ^^ { case x ~ y => (x, y) }
-  def value: Parser[JsValue] = (jsonObj | jsonArray | number | "true" ^^^ JsTrue | "false" ^^^ JsFalse | "null" ^^^ JsNull | stringVal | identifier)
-  def identifier = accept("identifier", { case lexical.Identifier(n) => JsId(n) })
-  def stringVal  = accept("string", { case lexical.StringLit(n) => JsString(n) })
-  def number = accept("number", {case lexical.NumericLit(n) => numberParser.get.apply(n) })
+  def value: Parser[JsValue] = positioned(jsonObj | jsonArray | number | "true" ^^^ JsTrue | "false" ^^^ JsFalse | "null" ^^^ JsNull | stringVal | identifier)
+  def identifier = positioned(accept("identifier", { case lexical.Identifier(n) => JsId(n) }))
+  def stringVal  = positioned(accept("string", { case lexical.StringLit(n) => JsString(n) }))
+  def number = positioned(accept("number", {case lexical.NumericLit(n) => numberParser.get.apply(n) }))
 }
 
-sealed abstract class JsValue
+sealed abstract class JsValue extends Positional
 sealed trait JsFieldName
 
 case object JsNull extends JsValue
