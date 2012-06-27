@@ -12,7 +12,12 @@ object JSON {
   
   def applyImpl(c: Context)(jsonSource: c.Expr[String]): c.Expr[JValue] = {
     import c.universe._
-    import MacroHelper._
+
+    object macroHelper extends MacroHelper {
+      val context: c.type = c
+    }
+
+    import macroHelper._
 
     def jvalue2tree(j: JValue): c.Tree = {
       j match {
@@ -21,24 +26,24 @@ object JSON {
         case JObject(obj) =>
           val xs = obj.map {
             case (k, v) =>
-              pair(c)(Literal(Constant(k)), jvalue2tree(v))
+              pair(Literal(Constant(k)), jvalue2tree(v))
           }
-          jObject(c)(xs: _*)
+          jObject(xs: _*)
         case JArray(Nil) =>
           c.reify(JArray(Nil)).tree
         case JArray(arr) =>
           val xs = arr.map(x => jvalue2tree(x))
-          jArray(c)(xs: _*)
+          jArray(xs: _*)
         case JNull =>
           c.reify(JNull).tree
         case JString(s) =>
-          jString(c)(s)
+          jString(s)
         case JDouble(n) =>
-          jDouble(c)(n)
+          jDouble(n)
         case JInt(n) =>
-          jInt(c)(n)
+          jInt(n)
         case JBool(b) =>
-          jBool(c)(b)
+          jBool(b)
         case JNothing =>
           c.reify(JNothing).tree
       }

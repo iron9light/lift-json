@@ -6,65 +6,61 @@ import scala.reflect.makro.Context
 /**
  * @author IL
  */
-private[macros] object MacroHelper {
-  def list(c: Context)(xs: c.Tree*) = {
-    import c.universe._
+private[macros] abstract class MacroHelper {
+  val context: Context
+
+  import context.literal
+  import context.universe._
+
+  def list(xs: Tree*) = {
     val Apply(fun, _) = reify(List(0)).tree
     Apply.apply(fun, xs.toList)
   }
 
-  def jArray(c: Context)(xs: c.Tree*) = {
-    import c.universe._
+  def jArray(xs: Tree*) = {
     val Apply(fun, _) = reify(JArray(Nil)).tree
-    Apply.apply(fun, list(c)(xs: _*) :: Nil)
+    Apply.apply(fun, list(xs: _*) :: Nil)
   }
 
-  def pair(c: Context)(_1: c.Tree, _2: c.Tree) = {
-    import c.universe._
+  def pair(_1: Tree, _2: Tree) = {
     val Apply(fun, _) = reify((null, null)).tree
     Apply.apply(fun, _1 :: _2 :: Nil)
   }
 
-  def jObject(c: Context)(xs: c.Tree*) = {
-    import c.universe._
+  def jObject(xs: Tree*) = {
     val Apply(fun, _) = reify(JObject()).tree
     Apply.apply(fun, xs.toList)
   }
 
-  def jString(c: Context)(s: String) = {
-    import c.universe._
+  def jString(s: String) = {
     val Apply(fun, _) = reify(JString("")).tree
-    Apply.apply(fun, c.literal(s).tree :: Nil)
+    Apply.apply(fun, literal(s).tree :: Nil)
   }
 
-  def jDouble(c: Context)(n: Double) = {
-    import c.universe._
+  def jDouble(n: Double) = {
     val Apply(fun, _) = reify(JDouble(0.0)).tree
-    Apply.apply(fun, c.literal(n).tree :: Nil)
+    Apply.apply(fun, literal(n).tree :: Nil)
   }
 
-  def bigInt(c: Context)(n: BigInt) = {
-    import c.universe._
+  def bigInt(n: BigInt) = {
     val Apply(fun, _) = reify(BigInt("0")).tree
-    Apply.apply(fun, c.literal(n.toString).tree :: Nil)
+    Apply.apply(fun, literal(n.toString).tree :: Nil)
   }
 
-  def jInt(c: Context)(n: BigInt) = {
-    import c.universe._
+  def jInt(n: BigInt) = {
     val Apply(fun, _) = reify(JInt(0)).tree
-    Apply.apply(fun, bigInt(c)(n) :: Nil)
+    Apply.apply(fun, bigInt(n) :: Nil)
   }
 
-  def jBool(c: Context)(b: Boolean) = {
+  def jBool(b: Boolean) = {
     if (b) {
-      c.reify(JBool(true)).tree
+      reify(JBool(true)).tree
     } else {
-      c.reify(JBool(false)).tree
+      reify(JBool(false)).tree
     }
   }
 
-  def variable[T](c: Context)(id: String) = {
-    import c.universe._
-    c.Expr[T](Ident(newTermName(id))).tree
+  def variable[T](id: String) = {
+    context.Expr[T](Ident(newTermName(id))).tree
   }
 }

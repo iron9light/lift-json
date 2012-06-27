@@ -13,7 +13,6 @@ object J {
 
   def applyImpl(c: Context)(jsSource: c.Expr[String]): c.Expr[JValue] = {
     import c.universe._
-    import MacroHelper._
 
     val s_jsSource = jsSource.tree match {
       case Literal(Constant(s: String)) =>
@@ -42,16 +41,22 @@ object J {
       }
     }
 
+    object macroHelper extends MacroHelper {
+      val context: c.type = c
+    }
+
+    import macroHelper._
+
     def js2tree(j: JsValue): c.Tree = {
       val tree = j match {
         case JsNull =>
           c.reify(JNull).tree
         case JsString(s) =>
-          jString(c)(s)
+          jString(s)
         case JsDouble(num) =>
-          jDouble(c)(num)
+          jDouble(num)
         case JsInt(num) =>
-          jInt(c)(num)
+          jInt(num)
         case JsTrue =>
           c.reify(JBool(true)).tree
         case JsFalse =>
@@ -65,18 +70,18 @@ object J {
                 case JsString(s) =>
                   c.literal(s).tree
                 case JsId(id) =>
-                  variable[String](c)(id)
+                  variable[String](id)
               }
-              pair(c)(fieldName, js2tree(v))
+              pair(fieldName, js2tree(v))
           }
-          jObject(c)(xs: _*)
+          jObject(xs: _*)
         case JsArray(Nil) =>
           c.reify(JArray(Nil)).tree
         case JsArray(arr) =>
           val xs = arr.map(x => js2tree(x))
-          jArray(c)(xs: _*)
+          jArray(xs: _*)
         case JsId(id) =>
-          variable[JValue](c)(id)
+          variable[JValue](id)
       }
       
       tree.setPos(j.pos)
