@@ -12,4 +12,6 @@ startYear in ThisBuild             := Some(2006)
 
 organizationName in ThisBuild      := "WorldWide Conferencing, LLC"
 
+libraryDependencies in ThisBuild  <+= scalaVersion { sv => "org.scala-lang" % "scala-reflect" % sv }
+
 libraryDependencies in ThisBuild   += "org.specs2" %% "specs2" % "1.12.3" % "test"

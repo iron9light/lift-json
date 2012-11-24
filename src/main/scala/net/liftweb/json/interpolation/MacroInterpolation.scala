@@ -15,14 +15,19 @@
  */
 
 package net.liftweb.json
+package interpolation
 
-package object interpolation {
+import reflect.macros.Context
 
-  implicit class JsonContext(val stringContext: StringContext) extends AnyVal {
-    def json(args: Any*): JValue = JsonContextParser.parse(stringContext.parts, args)
+object MacroInterpolation {
+  def interpolate(c: Context)(args: c.Expr[_]*): c.Expr[JValue] = {
+    import c.universe._
+    val parts = c.prefix.tree match {
+      case Select(Apply(_, List(Apply(_, literalParts))), _) =>
+        literalParts
+      case _ =>
+    }
 
-    import language.experimental.macros
-    def J(args: Any*): JValue = macro MacroInterpolation.interpolate
+    c.literalNull
   }
-
 }

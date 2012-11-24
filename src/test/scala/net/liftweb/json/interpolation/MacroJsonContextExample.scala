@@ -15,14 +15,25 @@
  */
 
 package net.liftweb.json
+package interpolation
 
-package object interpolation {
+import org.specs2.mutable.Specification
 
-  implicit class JsonContext(val stringContext: StringContext) extends AnyVal {
-    def json(args: Any*): JValue = JsonContextParser.parse(stringContext.parts, args)
+object MacroJsonContextExample extends Specification {
+  import JsonDSL._
 
-    import language.experimental.macros
-    def J(args: Any*): JValue = macro MacroInterpolation.interpolate
+  "MacroJsonContext example" in {
+    val firstName: JValue = "Iron"
+    val secondName: JValue = "Light"
+    val name = "Name"
+    val json: JValue = J"""
+    {
+      "firstName": $firstName,
+      "last$name": $secondName,
+      "age": 5
+    }
+    """
+
+    json mustEqual null
   }
-
 }
