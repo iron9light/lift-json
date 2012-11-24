@@ -1,4 +1,4 @@
-scalaVersion := "2.10.0-RC2"
+scalaVersion := "2.10.0-RC3"
 
 organization in ThisBuild          := "net.liftweb"
 
@@ -11,3 +11,5 @@ licenses in ThisBuild              += ("Apache License, Version 2.0", url("http:
 startYear in ThisBuild             := Some(2006)
 
 organizationName in ThisBuild      := "WorldWide Conferencing, LLC"
+
+libraryDependencies in ThisBuild   += "org.specs2" %% "specs2" % "1.12.3" % "test"
