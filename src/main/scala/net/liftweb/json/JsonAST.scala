@@ -1,4 +1,21 @@
-package net.liftweb.json
+/*
+ * Copyright 2009-2011 WorldWide Conferencing, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package net.liftweb 
+package json 
 
 object JsonAST {
   import scala.text.{Document, DocText}
@@ -17,10 +34,8 @@ object JsonAST {
   /**
    * Data type for JSON AST.
    */
-  sealed abstract class JValue extends Dynamic with Diff.Diffable {
+  sealed abstract class JValue extends Diff.Diffable {
     type Values
-    
-    def selectDynamic(name: String): JValue = JNothing
 
     /** XPath-like expression to query JSON fields by name. Matches only fields on
      * next level.
@@ -366,8 +381,8 @@ object JsonAST {
      * JObject(JField("name", JString("joe")) :: Nil).extract[Person] == Person("joe")
      * </pre>
      */
-//    def extract[A](implicit formats: Formats, mf: scala.reflect.Manifest[A]): A =
-//      Extraction.extract(this)(formats, mf)
+    // def extract[A](implicit formats: Formats, mf: scala.reflect.Manifest[A]): A =
+    //   Extraction.extract(this)(formats, mf)
 
     /** Extract a value from a JSON.
      * <p>
@@ -384,8 +399,8 @@ object JsonAST {
      * JObject(JField("name", JString("joe")) :: Nil).extractOpt[Person] == Some(Person("joe"))
      * </pre>
      */
-//    def extractOpt[A](implicit formats: Formats, mf: scala.reflect.Manifest[A]): Option[A] =
-//      Extraction.extractOpt(this)(formats, mf)
+    // def extractOpt[A](implicit formats: Formats, mf: scala.reflect.Manifest[A]): Option[A] =
+    //   Extraction.extractOpt(this)(formats, mf)
 
     /** Extract a value from a JSON using a default value.
      * <p>
@@ -402,8 +417,8 @@ object JsonAST {
      * JNothing.extractOrElse(Person("joe")) == Person("joe")
      * </pre>
      */
-//    def extractOrElse[A](default: => A)(implicit formats: Formats, mf: scala.reflect.Manifest[A]): A =
-//      Extraction.extractOpt(this)(formats, mf).getOrElse(default)
+    // def extractOrElse[A](default: => A)(implicit formats: Formats, mf: scala.reflect.Manifest[A]): A =
+    //   Extraction.extractOpt(this)(formats, mf).getOrElse(default)
 
     def toOpt: Option[JValue] = this match {
       case JNothing => None
@@ -431,9 +446,28 @@ object JsonAST {
     type Values = BigInt
     def values = num
   }
-  case class JBool(value: Boolean) extends JValue {
+  sealed abstract class JBool extends JValue {
     type Values = Boolean
-    def values = value
+  }
+
+  object JBool {
+    def apply(value: Boolean) = value match {
+      case true => JTrue
+      case false => JFalse
+    }
+
+    def unapply(jBool: JBool) = jBool match {
+      case JTrue => Some(true)
+      case JFalse => Some(false)
+    }
+  }
+
+  case object JTrue extends JBool {
+    val values = true
+  }
+
+  case object JFalse extends JBool {
+    val values = false
   }
   
   case class JObject(obj: List[JField]) extends JValue {
@@ -444,8 +478,6 @@ object JsonAST {
       case o: JObject => Set(obj.toArray: _*) == Set(o.obj.toArray: _*)
       case _ => false
     }
-
-    override def selectDynamic(name: String) = obj.find(_._1 == name).map(_._2).getOrElse(JNothing)
   }
   case object JObject {
     def apply(fs: JField*): JObject = JObject(fs.toList)
@@ -469,12 +501,12 @@ object JsonAST {
    */
   def render(value: JValue): Document = value match {
     case null          => text("null")
-    case JBool(true)   => text("true")
-    case JBool(false)  => text("false")
+    case JTrue         => text("true")
+    case JFalse        => text("false")
     case JDouble(n)    => text(n.toString)
     case JInt(n)       => text(n.toString)
     case JNull         => text("null")
-    case JNothing      => error("can't render 'nothing'")
+    case JNothing      => sys.error("can't render 'nothing'")
     case JString(null) => text("null")
     case JString(s)    => text("\"" + quote(s) + "\"")
     case JArray(arr)   => text("[") :: series(trimArr(arr).map(render)) :: text("]")
@@ -636,3 +668,4 @@ trait Printer {
     out
   }
 }
+

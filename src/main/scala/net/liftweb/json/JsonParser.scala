@@ -1,4 +1,21 @@
-package net.liftweb.json
+/*
+ * Copyright 2009-2010 WorldWide Conferencing, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package net.liftweb
+package json
 
 /** JSON parser.
  */
@@ -31,18 +48,18 @@ object JsonParser {
    * @param closeAutomatically true (default) if the Reader is automatically closed on EOF
    * @throws ParseException is thrown if parsing fails
    */
-  def parse(s: Reader, closeAutomatically: Boolean = true): JValue =
+  def parse(s: Reader, closeAutomatically: Boolean = true): JValue = 
     parse(new Buffer(s, closeAutomatically))
 
   /** Return parsed JSON.
    */
-  def parseOpt(s: String): Option[JValue] =
+  def parseOpt(s: String): Option[JValue] = 
     try { parse(s).toOpt } catch { case e: Exception => None }
 
   /** Return parsed JSON.
    * @param closeAutomatically true (default) if the Reader is automatically closed on EOF
    */
-  def parseOpt(s: Reader, closeAutomatically: Boolean = true): Option[JValue] =
+  def parseOpt(s: Reader, closeAutomatically: Boolean = true): Option[JValue] = 
     try { parse(s, closeAutomatically).toOpt } catch { case e: Exception => None }
 
   /** Parse in pull parsing style.
@@ -66,10 +83,10 @@ object JsonParser {
       case e: Exception => throw new ParseException("parsing failed", e)
     } finally { buf.release }
   }
-
-  private[json] def unquote(string: String): String =
+  
+  private[json] def unquote(string: String): String = 
     unquote(new JsonParser.Buffer(new java.io.StringReader(string), false))
-
+  
   private[json] def unquote(buf: JsonParser.Buffer): String = {
     def unquote0(buf: JsonParser.Buffer, base: String): String = {
       val s = new java.lang.StringBuilder(base)
@@ -112,12 +129,12 @@ object JsonParser {
     buf.substring
   }
 
-  // FIXME fail fast to prevent infinite loop, see
+  // FIXME fail fast to prevent infinite loop, see 
   // http://www.exploringbinary.com/java-hangs-when-converting-2-2250738585072012e-308/
   private val BrokenDouble = BigDecimal("2.2250738585072012e-308")
   private[json] def parseDouble(s: String) = {
     val d = BigDecimal(s)
-    if (d == BrokenDouble) error("Error parsing 2.2250738585072012e-308")
+    if (d == BrokenDouble) sys.error("Error parsing 2.2250738585072012e-308")
     else d.doubleValue
   }
 
@@ -144,7 +161,7 @@ object JsonParser {
           vals.pop(classOf[JField])
           val obj = vals.peek(classOf[JObject])
           vals.replace(JObject((name, toJValue(v)) :: obj.obj))
-        case Some(o: JObject) =>
+        case Some(o: JObject) => 
           vals.replace(JObject(vals.peek(classOf[JField]) :: o.obj))
         case Some(a: JArray) => vals.replace(JArray(toJValue(v) :: a.arr))
         case Some(x) => p.fail("expected field, array or object but got " + x)
@@ -217,22 +234,12 @@ object JsonParser {
     def nextToken: Token = {
       def isDelimiter(c: Char) = c == ' ' || c == '\n' || c == ',' || c == '\r' || c == '\t' || c == '}' || c == ']'
 
-      def parseFieldName: String = {
-        buf.mark
-        var c = buf.next
-        while (c != EOF) {
-          if (c == '"') return buf.substring
-          c = buf.next
-        }
-        fail("expected string end")
-      }
-
-      def parseString: String =
+      def parseString: String = 
         try {
           unquote(buf)
         } catch {
           case p: ParseException => throw p
-          case _ => fail("unexpected string end")
+          case _: Throwable => fail("unexpected string end")
         }
 
       def parseValue(first: Char) = {
@@ -251,13 +258,13 @@ object JsonParser {
           } else s.append(c)
         }
         val value = s.toString
-        if (doubleVal) DoubleVal(parseDouble(value))
+        if (doubleVal) DoubleVal(parseDouble(value)) 
         else IntVal(BigInt(value))
       }
 
       while (true) {
         buf.next match {
-          case c if EOF == c =>
+          case c if EOF == c => 
             buf.automaticClose
             return End
           case '{' =>
@@ -268,7 +275,7 @@ object JsonParser {
             blocks.poll
             return CloseObj
           case '"' =>
-            if (fieldNameMode && blocks.peek == OBJECT) return FieldStart(parseFieldName)
+            if (fieldNameMode && blocks.peek == OBJECT) return FieldStart(parseString)
             else {
               fieldNameMode = true
               return StringVal(parseString)
@@ -346,7 +353,7 @@ object JsonParser {
     def substring = {
       if (curSegmentIdx == curMarkSegment) new String(segment, curMark, cur-curMark-1)
       else { // slower path for case when string is in two or more segments
-      var parts: List[(Int, Int, Array[Char])] = Nil
+        var parts: List[(Int, Int, Array[Char])] = Nil
         var i = curSegmentIdx
         while (i >= curMarkSegment) {
           val s = segments(i).seg
@@ -375,7 +382,7 @@ object JsonParser {
 
     def release = segments.foreach(Segments.release)
 
-    private[json] def automaticClose = if (closeAutomatically) in.close
+    private[JsonParser] def automaticClose = if (closeAutomatically) in.close
 
     private[this] def read = {
       if (offset >= segment.length) {
@@ -413,7 +420,7 @@ object JsonParser {
 
     private[this] def acquire: Segment = {
       val curCount = segmentCount.get
-      val createNew =
+      val createNew = 
         if (segments.size == 0 && curCount < maxNumOfSegments)
           segmentCount.compareAndSet(curCount, curCount + 1)
         else false

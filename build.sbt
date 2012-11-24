@@ -1,9 +1,13 @@
-name := "net.liftweb.json"
+scalaVersion := "2.10.0-RC2"
 
-version := "0.1-SNAPSHOT"
+organization in ThisBuild          := "net.liftweb"
 
-scalaVersion := "2.10.0-M4"
+version in ThisBuild               := "3.0-SNAPSHOT"
 
-libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.10.0-M4"
+homepage in ThisBuild              := Some(url("http://www.liftweb.net"))
 
-libraryDependencies += "org.scalatest" % "scalatest_2.10.0-M4" % "1.9-2.10.0-M4-B1" % "test"
+licenses in ThisBuild              += ("Apache License, Version 2.0", url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
+
+startYear in ThisBuild             := Some(2006)
+
+organizationName in ThisBuild      := "WorldWide Conferencing, LLC"

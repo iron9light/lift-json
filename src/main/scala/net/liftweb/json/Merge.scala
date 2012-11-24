@@ -1,6 +1,23 @@
-package net.liftweb.json
+/*
+ * Copyright 2009-2010 WorldWide Conferencing, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-/** Use fundep encoding to improve return type of merge function
+package net.liftweb
+package json
+
+/** Use fundep encoding to improve return type of merge function 
  *  (see: http://www.chuusai.com/2011/07/16/fundeps-in-scala/)
  *
  *  JObject merge JObject = JObject
@@ -46,13 +63,13 @@ object Merge {
    * </pre>
    */
   def merge[A <: JValue, B <: JValue, R <: JValue]
-  (val1: A, val2: B)(implicit instance: MergeDep[A, B, R]): R = instance(val1, val2)
+    (val1: A, val2: B)(implicit instance: MergeDep[A, B, R]): R = instance(val1, val2)
 
   private[json] def mergeFields(vs1: List[JField], vs2: List[JField]): List[JField] = {
     def mergeRec(xleft: List[JField], yleft: List[JField]): List[JField] = xleft match {
       case Nil => yleft
       case (xn, xv) :: xs => yleft find (_._1 == xn) match {
-        case Some(y @ (yn, yv)) =>
+        case Some(y @ (yn, yv)) => 
           (xn, merge(xv, yv)) :: mergeRec(xs, yleft filterNot (_ == y))
         case None => JField(xn, xv) :: mergeRec(xs, yleft)
       }
@@ -73,14 +90,14 @@ object Merge {
     mergeRec(vs1, vs2)
   }
 
-  private[json] trait Mergeable extends MergeDeps {
+  private[json] trait Mergeable extends MergeDeps { 
     implicit def j2m[A <: JValue](json: A): MergeSyntax[A] = new MergeSyntax(json)
 
     class MergeSyntax[A <: JValue](json: A) {
       /** Return merged JSON.
        * @see net.liftweb.json.Merge#merge
        */
-      def merge[B <: JValue, R <: JValue](other: B)(implicit instance: MergeDep[A, B, R]): R =
+      def merge[B <: JValue, R <: JValue](other: B)(implicit instance: MergeDep[A, B, R]): R = 
         Merge.merge(json, other)(instance)
     }
   }
