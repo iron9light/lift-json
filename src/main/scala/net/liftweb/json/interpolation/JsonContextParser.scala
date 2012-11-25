@@ -20,9 +20,6 @@ package interpolation
 import annotation.tailrec
 import java.util
 
-/**
- * @author IL
- */
 object JsonContextParser {
 
   class ParseException(message: String, cause: Exception) extends Exception(message, cause)
@@ -236,87 +233,6 @@ object JsonContextParser {
 
     buf.eofIsFailure = false
     s.toString
-  }
-
-  private[json] def unquote2(buf: Buffer): String = {
-    def unquote0(buf: Buffer, s: java.lang.StringBuilder): String = {
-      var c = '\\'
-      while (c != '"') {
-        if (c == '\\') {
-          buf.next match {
-            case Left(cc) =>
-              cc match {
-                case '"' => s.append('"')
-                case '\\' => s.append('\\')
-                case '/' => s.append('/')
-                case 'b' => s.append('\b')
-                case 'f' => s.append('\f')
-                case 'n' => s.append('\n')
-                case 'r' => s.append('\r')
-                case 't' => s.append('\t')
-                case 'u' =>
-                  val Left(c1) = buf.next
-                  val Left(c2) = buf.next
-                  val Left(c3) = buf.next
-                  val Left(c4) = buf.next
-                  val chars = Array(c1, c2, c3, c4)
-                  val codePoint = Integer.parseInt(new String(chars), 16)
-                  s.appendCodePoint(codePoint)
-                case _ => s.append('\\')
-              }
-            case Right(x) =>
-              s.append('\\')
-              s.append(x)
-          }
-        } else s.append(c)
-
-        @tailrec
-        def nextC(): Char = buf.next match {
-          case Left(cc) =>
-            cc
-          case Right(x) =>
-            s.append(x)
-            nextC()
-        }
-        c = nextC()
-      }
-      s.toString
-    }
-
-    buf.eofIsFailure = true
-    buf.mark()
-    buf.next match {
-      case Right(x) =>
-        buf.eofIsFailure = false
-        x.toString
-      case Left(cc) =>
-        var c = cc
-        val sb = new java.lang.StringBuilder
-        while (c != '"') {
-          if (c == '\\') {
-            val s = unquote0(buf, sb)
-            buf.eofIsFailure = false
-            return s
-          }
-
-          @tailrec
-          def nextC(): Char = {
-            buf.next match {
-              case Left(cc) =>
-//                sb.append(cc)
-                cc
-              case Right(x) =>
-                sb.append(x)
-                nextC()
-            }
-          }
-
-          sb.append(c)
-          c = nextC()
-        }
-        buf.eofIsFailure = false
-        sb.toString
-    }
   }
 
   // FIXME fail fast to prevent infinite loop, see

@@ -19,21 +19,11 @@ package interpolation
 
 import reflect.macros.Context
 
-object MacroInterpolation {
-  def interpolate(c: Context)(args: c.Expr[_]*): c.Expr[JValue] = {
-    import c.universe._
-
-    val parts: List[Tree] = c.prefix.tree match {
-      case Apply(_, List(Apply(_, literalParts))) =>
-        literalParts
-      case _ =>
-        c.abort(c.prefix.tree.pos.focus, f"Unexpected tree: ${showRaw(c.prefix.tree)}")
-    }
-
-    object contextParser extends MacroJsonContextParser {
-      val context: c.type = c
-    }
-
-    contextParser.parse(parts, args.map(_.tree))
+abstract class MacroJsonContextParser {
+  val context: Context
+  import context.universe._
+  def parse(parts: Seq[Tree], args: Seq[Tree]): context.Expr[JValue] = {
+    // todo
+    context.literalNull
   }
 }
