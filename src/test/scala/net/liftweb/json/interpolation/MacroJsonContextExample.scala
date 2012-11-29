@@ -23,8 +23,8 @@ object MacroJsonContextExample extends Specification {
   import JsonDSL._
 
   "MacroJsonContext example" in {
-    val firstName: JValue = "Iron"
-    val secondName: JValue = "Light"
+    val firstName = "Iron"
+    val secondName = "Light"
     val name = "Name"
     val json: JValue = J"""
     {
@@ -34,6 +34,6 @@ object MacroJsonContextExample extends Specification {
     }
     """
 
-    json mustEqual null
+    json mustEqual (("firstName" -> "Iron") ~ ("lastName" -> "Light") ~ ("age" -> 5))
   }
 }

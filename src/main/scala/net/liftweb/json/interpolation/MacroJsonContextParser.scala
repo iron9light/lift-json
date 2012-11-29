@@ -82,8 +82,6 @@ abstract class MacroJsonContextParser {
             context.abort(badToken.pos, f"expected end, but got $badToken")
         }
     }
-
-    // context.literalNull
   }
 
   private def astParse(p: Parser): Tree = {
@@ -100,11 +98,11 @@ abstract class MacroJsonContextParser {
         astParseArray(p, token.pos)
       case OpenString =>
         val stringTree = astParseString(p, token.pos)
-        reify(JString(context.eval(context.Expr[String](stringTree)))).tree.setPos(stringTree.pos)
+        reify(JString(context.Expr[String](stringTree).splice)).tree.setPos(stringTree.pos)
       case IntVal(value) =>
-        reify(JInt(BigInt(context.eval(context.literal(value.toString))))).tree.setPos(token.pos)
+        reify(JInt(BigInt(context.literal(value.toString).splice))).tree.setPos(token.pos)
       case DoubleVal(value) =>
-        reify(JDouble(context.eval(context.literal(value)))).tree.setPos(token.pos)
+        reify(JDouble(context.literal(value).splice)).tree.setPos(token.pos)
       case BoolVal(true) =>
         reify(JTrue).tree.setPos(token.pos)
       case BoolVal(false) =>
@@ -130,7 +128,7 @@ abstract class MacroJsonContextParser {
           val position = startPosition.withEnd(token.pos.endOrPoint)
           val Apply(fun, _) = reify(List(0)).tree
           val listExpr = context.Expr[List[JField]](Apply.apply(fun, list.reverse))
-          reify(JObject(context.eval(listExpr))).tree.setPos(position)
+          reify(JObject(listExpr.splice)).tree.setPos(position)
         case _ =>
           context.abort(token.pos, f"expected feild, but got $token")
       }
@@ -150,13 +148,13 @@ abstract class MacroJsonContextParser {
         context.abort(token.pos, f"expected field, array or object but got $token")
 
     }
-    val fieldName = context.eval(context.Expr[String](fieldNameTree))
+    val fieldNameExpr = context.Expr[String](fieldNameTree)
 
     p.nextToken match {
       case CloseFieldName =>
         val fieldValueTree = astParse(p)
-        val fieldValue = context.eval(context.Expr[JValue](fieldValueTree))
-        reify(JField(fieldName, fieldValue)).tree.setPos(startPosition.withEnd(fieldValueTree.pos.endOrPoint))
+        val fieldValueExpr = context.Expr[JValue](fieldValueTree)
+        reify(JField(fieldNameExpr.splice, fieldValueExpr.splice)).tree.setPos(startPosition.withEnd(fieldValueTree.pos.endOrPoint))
       case badToken =>
         context.abort(badToken.pos, f"expected close token for field name: $badToken")
     }
@@ -171,7 +169,7 @@ abstract class MacroJsonContextParser {
           val position = startPosition.withEnd(token.pos.endOrPoint)
           val Apply(fun, _) = reify(List(0)).tree
           val listExpr = context.Expr[List[JValue]](Apply.apply(fun, list.reverse))
-          reify(JArray(context.eval(listExpr))).tree.setPos(position)
+          reify(JArray(listExpr.splice)).tree.setPos(position)
         case _ =>
           parseLoop(astParse(token, p)::list)
       }
@@ -194,7 +192,7 @@ abstract class MacroJsonContextParser {
           val Apply(fun, _) = reify(Array(0)).tree
           val position = startPosition.withEnd(token.pos.endOrPoint)
           val arrayExpr = context.Expr[Array[String]](Apply.apply(fun, list.reverse))
-          reify(context.eval(arrayExpr).mkString).tree.setPos(position)
+          reify(arrayExpr.splice.mkString).tree.setPos(position)
         case _ =>
           context.abort(token.pos, f"wrong token for string: $token")
       }
@@ -290,6 +288,11 @@ abstract class MacroJsonContextParser {
         stringBegin = true
         buf.eofIsFailure = false
         tokenQueen.add(CloseString.withPos(buf.position))
+        if (fieldNameMode && blocks.peek == ObjectMode) {
+          tokenQueen.add(CloseFieldName.withPos(buf.position))
+        } else {
+          fieldNameMode = true
+        }
         StringVal(s.toString).withPos(buf.position.withPoint(startPoint).withStart(startPoint).withEnd(lastPoint))
       }
 
@@ -318,7 +321,7 @@ abstract class MacroJsonContextParser {
                   return OpenObj
                 case '}' =>
                   blocks.poll()
-                  return CloseObj
+                  return CloseObj.withPos(buf.position)
                 case '"' =>
                   if (fieldNameMode && blocks.peek == ObjectMode) {
                     stringMode = true
@@ -414,7 +417,7 @@ abstract class MacroJsonContextParser {
 
   private[interpolation] class Buffer(parts: Seq[Tree], args: Seq[Tree]) {
     private[this] val partsIter = parts.iterator
-    private[this] val argsIter = parts.iterator
+    private[this] val argsIter = args.iterator
 
     private[this] var current: Option[String] = None
     private[this] var offset = 0
@@ -460,19 +463,24 @@ abstract class MacroJsonContextParser {
         }
       } else {
         isPart = true
-        val argTree = argsIter.next()
-        if (partsIter.hasNext) {
-          val tree = partsIter.next()
-          val Literal(Constant(s: String)) = tree
-          current = Some(s)
-          start = tree.pos.startOrPoint
-          offset = 0
+
+        if (argsIter.hasNext) {
+          val argTree = argsIter.next()
+          if (partsIter.hasNext) {
+            val tree = partsIter.next()
+            val Literal(Constant(s: String)) = tree
+            current = Some(s)
+            start = tree.pos.startOrPoint
+            offset = 0
+          } else {
+            current = None
+            start = argTree.pos.endOrPoint
+            offset = 0
+          }
+          Right(argTree)
         } else {
-          current = None
-          start = argTree.pos.endOrPoint
-          offset = 0
+          Left(EOF)
         }
-        Right(argTree)
       }
     }
   }
