@@ -1,57 +1,85 @@
 lift-json for scala 2.10
 ========================
 
-Based on lift branch [joni_scala_2.10](https://github.com/lift/framework/tree/joni_scala_2.10)
+This project is an expriment and preview for next version [life](http://liftweb.net)-json library.
 
-Try to add some cool things with new features of scala 2.10 (reflection and macro etc.)
+Try to add some cool things with new features of scala 2.10 (string interpolation and macro etc.)
 
-### Dynamic invoke
+This branch is focus on the best way to create a Json object, with string interpolation and macro.
+Things can't be more easier!
 
-https://github.com/iron9light/lift-json/blob/master/src/test/scala/net/liftweb/json/JValueSuite.scala
+Features
+--------
 
-```scala
-val j: JValue = (
-  "a" -> (
-    "b" -> "c"
-    )
-  )
+### Create Json via String Interpolation at runtime
 
-j.a.b should be === JString("c")
-j.b should be === JNothing
-```
+https://github.com/iron9light/lift-json/blob/interpolation/src/test/scala/net/liftweb/json/interpolation/JsonContextExample.scala#L29
 
-### Write JValue with JSON String
+Kinda external DSL val scala string interpolation.
 
-https://github.com/iron9light/lift-json/blob/master/src/test/scala/net/liftweb/json/macros/JsonSuite.scala#L11
-
-Kinda external DSL val scala macro.
-So this JSON string will be compiled at compile-time.
+This JSON string will be parsed at runtime.
 
 ```scala
-JSON( """{ "a": ["100", 100, 100.1, true, false, null] }""") should be ===
-  JObject(
-    ("a" -> JArray(JString("100") :: JInt(100) :: JDouble(100.1) :: JBool(true) :: JBool(false) :: JNull :: Nil))
-  )
+    val firstName: JValue = "Iron"
+    val secondName: JValue = "Light"
+    val name = "Name"
+    val json = json"""
+    {
+      "firstName": $firstName,
+      "last$name": $secondName,
+      "age": 5
+    }
+    """
 ```
 
-### Write JValue with Javascript-like String
+### Create Json via String Interpolation at compile-time
 
-https://github.com/iron9light/lift-json/blob/master/src/test/scala/net/liftweb/json/macros/JSuite.scala
+https://github.com/iron9light/lift-json/blob/interpolation/src/test/scala/net/liftweb/json/interpolation/MacroJsonContextExample.scala#L29
 
-Same as the JSON String, but support variables.
+Same as above, except it's created at compile-time!
+
+Typesafe and great runtime efficiency.
+
+All the **MACRO** style!
 
 ```scala
-import JsonDSL._
-val a = 100
-val b = false
-val aName = "a.a"
-J( """
-{
-  "a": {
-    aName: [a, b, null, 100.1, 'yes', "'no'"]
-  }
-}
-""")
+    val firstName = "Iron"
+    val secondName = "Light"
+    val name = "Name"
+    val json: JValue = J"""
+    {
+      "firstName": $firstName,
+      "last$name": $secondName,
+      "age": 5
+    }
+    """
 ```
 
-### And more...
+Build
+-----
+
+### Prerequired
+
+* Java JDK 1.6+
+
+* sbt 0.12.1+
+
+### Compile & Test
+
+`sbt compile`
+
+`sbt test`
+
+License
+-------
+
+[Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
+
+About Me
+--------
+
+I'm a committer of [Lift](http://liftweb.net) framework.
+
+And now I'm working for Microsoft.
+
+twitter: [@iron9light](https://twitter.com/iron9light)
