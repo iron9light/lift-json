@@ -1,5 +1,7 @@
 scalaVersion := "2.10.0-RC3"
 
+name in ThisBuild                  := "lift-json"
+
 organization in ThisBuild          := "net.liftweb"
 
 version in ThisBuild               := "3.0-SNAPSHOT"
