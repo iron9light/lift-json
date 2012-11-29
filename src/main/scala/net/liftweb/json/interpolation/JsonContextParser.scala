@@ -155,11 +155,11 @@ object JsonContextParser {
                 fieldNameMode = true
                 blocks.poll
                 return CloseArr
-              case c if Character.isDigit(c) || c == '-' =>
+              case _ if Character.isDigit(c) || c == '-' =>
                 fieldNameMode = true
                 return parseValue(c)
-              case c if isDelimiter(c) =>
-              case c => fail("unknown token " + c)
+              case _ if isDelimiter(c) =>
+              case _ => fail("unknown token " + c)
             }
           case Right(x) =>
             if (fieldNameMode && blocks.peek == OBJECT) return FieldStart(x.toString)
