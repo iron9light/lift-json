@@ -9,15 +9,6 @@ How To Run
 
 `sbt run`
 
-Warnning
---------
-There's a **scala compiler bug** for you.
-The compile will be failed at the first time with the error shows below:
-
-> [error] macro implementation not found: J (the most common reason for that is that you cannot use macro implementations in the same compilation run that defines them)
-
-You need to remove the "J" [here](https://github.com/iron9light/lift-json/blob/contest/src/main/scala/net/liftweb/json/app/MyApp.scala#L14) and compile. Then you restore the "J" and compile again. It will be success this time.
-
 Why I take part in this contest?
 --------------------------------
 

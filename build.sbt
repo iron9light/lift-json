@@ -1,6 +1,6 @@
-scalaVersion := "2.10.0-RC3"
+scalaVersion in ThisBuild          := "2.10.0-RC3"
 
-name in ThisBuild                  := "lift-json"
+name                               := "lift-json"
 
 organization in ThisBuild          := "net.liftweb"
 
@@ -14,6 +14,6 @@ startYear in ThisBuild             := Some(2006)
 
 organizationName in ThisBuild      := "WorldWide Conferencing, LLC"
 
-libraryDependencies in ThisBuild  <+= scalaVersion { sv => "org.scala-lang" % "scala-reflect" % sv }
+libraryDependencies               <+= scalaVersion { sv => "org.scala-lang" % "scala-reflect" % sv }
 
-libraryDependencies in ThisBuild   += "org.specs2" %% "specs2" % "1.12.3" % "test"
+libraryDependencies                += "org.specs2" %% "specs2" % "1.12.3" % "test"

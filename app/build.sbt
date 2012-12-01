@@ -1,0 +1,1 @@
+name                               := "lift-json-app"
